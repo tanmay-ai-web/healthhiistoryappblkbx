@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Health History Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { background:#f4f6fb; color:#222; padding:20px; }
+    h1, h2, h3 { margin-bottom:8px; }
+    .app-title { text-align:center; margin-bottom:20px; }
+    .tagline { text-align:center; color:#555; margin-bottom:25px; }
+
+    .layout { display:flex; flex-wrap:wrap; gap:16px; }
+    .card {
+      background:#fff;
+      border-radius:10px;
+      padding:16px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.07);
+      flex:1 1 320px;
+      min-width:280px;
+    }
+    label { font-size:13px; display:block; margin:6px 0 3px; }
+    input, select, textarea {
+      width:100%;
+      padding:7px 9px;
+      border-radius:6px;
+      border:1px solid #d0d4e4;
+      font-size:14px;
+    }
+    textarea { resize:vertical; min-height:60px; }
+    button {
+      border:none;
+      border-radius:6px;
+      background:#2563eb;
+      color:#fff;
+      padding:7px 14px;
+      font-size:14px;
+      cursor:pointer;
+      margin-top:8px;
+    }
+    button.secondary { background:#4b5563; }
+    button.small { padding:4px 10px; font-size:12px; }
+    button:disabled { background:#9ca3af; cursor:not-allowed; }
+
+    .row { display:flex; gap:8px; }
+    .row > div { flex:1; }
+
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; margin-right:6px; margin-top:4px; }
+    .pill.patient { background:#e0f2fe; color:#0369a1; }
+    .pill.doctor { background:#dcfce7; color:#15803d; }
+    .pill.verified { background:#bbf7d0; color:#166534; border:1px solid #16a34a; }
+
+    .muted { font-size:12px; color:#6b7280; margin-top:4px; }
+    .error { color:#b91c1c; font-size:12px; margin-top:4px; }
+    .success { color:#15803d; font-size:12px; margin-top:4px; }
+
+    .section-title { font-size:13px; font-weight:600; margin-top:10px; margin-bottom:4px; }
+
+    .history-entry {
+      border-radius:8px;
+      border:1px solid #e5e7eb;
+      padding:8px;
+      margin-top:8px;
+      background:#fafafa;
+    }
+    .history-meta { font-size:11px; color:#6b7280; margin-bottom:4px; }
+
+    .table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+      margin-top:8px;
+    }
+    .table th, .table td {
+      border:1px solid #e5e7eb;
+      padding:4px 6px;
+      text-align:left;
+    }
+    .table th { background:#f3f4f6; }
+
+    .badge-id {
+      font-family:monospace;
+      padding:2px 6px;
+      background:#111827;
+      color:#e5e7eb;
+      border-radius:4px;
+      font-size:12px;
+    }
+
+    @media (max-width:768px) {
+      body { padding:12px; }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="app-title">Health History Portal</h1>
+  <p class="tagline">One unique ID. All past and present medical history—securely shared between patient and doctor.</p>
+
+  <div class="layout">
+    <!-- Registration -->
+    <div class="card">
+      <h2>Register</h2>
+      <p class="muted">Create new patient or doctor account for the demo.</p>
+
+      <div class="section-title">Register Patient</div>
+      <div class="row">
+        <div>
+          <label>Full Name</label>
+          <input id="regPatientName" placeholder="e.g. Rahul Sharma" />
+        </div>
+        <div>
+          <label>Age</label>
+          <input id="regPatientAge" type="number" placeholder="e.g. 28" />
+        </div>
+      </div>
+      <label>Gender</label>
+      <select id="regPatientGender">
+        <option value="">Select gender</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+      <label>Create Password (demo)</label>
+      <input id="regPatientPassword" type="password" placeholder="min 4 characters" />
+      <button onclick="registerPatient()">Register Patient</button>
+      <div id="regPatientMsg" class="muted"></div>
+
+      <hr style="margin:14px 0;" />
+
+      <div class="section-title">Register Doctor</div>
+      <div class="row">
+        <div>
+          <label>Full Name</label>
+          <input id="regDoctorName" placeholder="e.g. Dr. Neha Verma" />
+        </div>
+        <div>
+          <label>Specialization</label>
+          <input id="regDoctorSpec" placeholder="e.g. Cardiologist" />
+        </div>
+      </div>
+      <label>Medical Registration / License No.</label>
+      <input id="regDoctorLicense" placeholder="e.g. MCI12345" />
+      <label>Create Password (demo)</label>
+      <input id="regDoctorPassword" type="password" placeholder="min 4 characters" />
+      <button class="secondary" onclick="registerDoctor()">Register Doctor</button>
+      <div id="regDoctorMsg" class="muted"></div>
+    </div>
+
+    <!-- Login -->
+    <div class="card">
+      <h2>Login</h2>
+      <p class="muted">Use your generated ID and password to login as patient or doctor.</p>
+
+      <div class="section-title">Patient Login</div>
+      <label>Patient ID</label>
+      <input id="loginPatientId" placeholder="e.g. P0001" />
+      <label>Password</label>
+      <input id="loginPatientPassword" type="password" />
+      <button onclick="loginPatient()">Login as Patient</button>
+      <div id="loginPatientMsg" class="muted"></div>
+
+      <hr style="margin:14px 0;" />
+
+      <div class="section-title">Doctor Login</div>
+      <label>Doctor ID</label>
+      <input id="loginDoctorId" placeholder="e.g. D0001" />
+      <label>Password</label>
+      <input id="loginDoctorPassword" type="password" />
+      <button class="secondary" onclick="loginDoctor()">Login as Doctor</button>
+      <div id="loginDoctorMsg" class="muted"></div>
+
+      <hr style="margin:14px 0;" />
+      <div class="section-title">Quick Demo Accounts</div>
+      <p class="muted">
+        After first registration, use those IDs to login. For fast demo, you can preload sample data
+        in JavaScript section.
+      </p>
+    </div>
+  </div>
+
+  <!-- Dashboards -->
+  <div class="layout" style="margin-top:18px;">
+    <!-- Patient Dashboard -->
+    <div class="card" id="patientDashboard" style="display:none;">
+      <h2>Patient Dashboard</h2>
+      <div id="patientHeader" class="muted"></div>
+
+      <div class="section-title">Your Unique Patient ID</div>
+      <p><span id="patientIdBadge" class="badge-id"></span></p>
+      <p class="muted">Share this ID with any verified doctor to allow them to view and update your full health history.</p>
+
+      <div class="section-title">Report New Problem</div>
+      <label>Current Problem / Symptoms</label>
+      <textarea id="patientProblem" placeholder="e.g. Fever and headache for 3 days"></textarea>
+      <label>Since when?</label>
+      <input id="patientProblemSince" placeholder="e.g. 3 days, 1 week" />
+      <button onclick="patientAddProblem()">Save Problem (for doctor to see)</button>
+      <div id="patientProblemMsg" class="muted"></div>
+
+      <div class="section-title">Your Complete History</div>
+      <div id="patientHistory"></div>
+
+      <button class="small" style="margin-top:10px;" onclick="logoutPatient()">Logout</button>
+    </div>
+
+    <!-- Doctor Dashboard -->
+    <div class="card" id="doctorDashboard" style="display:none;">
+      <h2>Doctor Dashboard</h2>
+      <div id="doctorHeader" class="muted"></div>
+      <span class="pill doctor">Doctor</span>
+      <span class="pill verified">Verified ID</span>
+
+      <div class="section-title">Search Patient by ID</div>
+      <div class="row">
+        <div>
+          <input id="searchPatientId" placeholder="e.g. P0001" />
+        </div>
+        <div style="flex:0 0 auto;">
+          <button class="small" onclick="searchPatient()">Search</button>
+        </div>
+      </div>
+      <div id="searchPatientMsg" class="muted"></div>
+
+      <div id="doctorPatientSection" style="display:none; margin-top:10px;">
+        <h3>Patient Overview</h3>
+        <div id="doctorPatientHeader" class="muted"></div>
+
+        <div class="section-title">Add Visit / Report</div>
+        <label>Diagnosis / Notes</label>
+        <textarea id="doctorDiagnosis" placeholder="Your clinical notes, diagnosis, recommendations"></textarea>
+        <label>Prescription / Treatment Plan</label>
+        <textarea id="doctorTreatment" placeholder="Medicines, lifestyle advice, tests, etc."></textarea>
+        <label>Optional: Report File Name (for demo)</label>
+        <input id="doctorReportFile" placeholder="e.g. blood_test_24Nov2025.pdf" />
+        <button onclick="doctorAddRecord()">Save to Patient History</button>
+        <div id="doctorAddRecordMsg" class="muted"></div>
+
+        <div class="section-title">Complete History for this Patient</div>
+        <div id="doctorPatientHistory"></div>
+      </div>
+
+      <button class="small" style="margin-top:10px;" onclick="logoutDoctor()">Logout</button>
+    </div>
+
+    <!-- Summary Card -->
+    <div class="card">
+      <h2>System Snapshot</h2>
+      <table class="table">
+        <tbody>
+          <tr><th>Total Patients</th><td id="statTotalPatients">0</td></tr>
+          <tr><th>Total Doctors</th><td id="statTotalDoctors">0</td></tr>
+          <tr><th>Total History Records</th><td id="statTotalRecords">0</td></tr>
+          <tr><th>Last Update</th><td id="statLastUpdate">–</td></tr>
+        </tbody>
+      </table>
+      <p class="muted" style="margin-top:8px;">
+        For real deployments, this data must be stored securely in a database with encryption,
+        role-based access control, and audit logs as recommended in healthcare systems.[web:11][web:10]
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // In‑memory "database" (for demo only)
+    const db = {
+      patients: {},   // id -> patient object
+      doctors: {},    // id -> doctor object
+      history: [],    // array of {patientId, createdBy, role, type, ...}
+      counters: { patient: 0, doctor: 0 }
+    };
+
+    let currentPatientId = null;
+    let currentDoctorId = null;
+    let currentDoctorViewPatientId = null;
+
+    function genId(prefix, num) {
+      return prefix + num.toString().padStart(4, "0");
+    }
+    function nowStr() {
+      return new Date().toLocaleString();
+    }
+
+    function updateStats() {
+      document.getElementById("statTotalPatients").innerText = Object.keys(db.patients).length;
+      document.getElementById("statTotalDoctors").innerText = Object.keys(db.doctors).length;
+      document.getElementById("statTotalRecords").innerText = db.history.length;
+      document.getElementById("statLastUpdate").innerText = db.history.length ? db.history[db.history.length-1].createdAt : "–";
+    }
+
+    // Registration
+    function registerPatient() {
+      const name = document.getElementById("regPatientName").value.trim();
+      const age = document.getElementById("regPatientAge").value.trim();
+      const gender = document.getElementById("regPatientGender").value;
+      const pwd = document.getElementById("regPatientPassword").value;
+
+      const msgEl = document.getElementById("regPatientMsg");
+      if (!name || !age || !gender || pwd.length < 4) {
+        msgEl.innerHTML = '<span class="error">Please fill all fields (password min 4 chars).</span>';
+        return;
+      }
+      db.counters.patient += 1;
+      const id = genId("P", db.counters.patient);
+      db.patients[id] = {
+        id, name, age: Number(age), gender, password: pwd
+      };
+      msgEl.innerHTML = '<span class="success">Patient registered. ID: <span class="badge-id">'+id+
+                        '</span> (use for login).</span>';
+      updateStats();
+    }
+
+    function registerDoctor() {
+      const name = document.getElementById("regDoctorName").value.trim();
+      const spec = document.getElementById("regDoctorSpec").value.trim();
+      const license = document.getElementById("regDoctorLicense").value.trim();
+      const pwd = document.getElementById("regDoctorPassword").value;
+
+      const msgEl = document.getElementById("regDoctorMsg");
+      if (!name || !spec || !license || pwd.length < 4) {
+        msgEl.innerHTML = '<span class="error">Please fill all fields (password min 4 chars).</span>';
+        return;
+      }
+      db.counters.doctor += 1;
+      const id = genId("D", db.counters.doctor);
+      db.doctors[id] = {
+        id, name, spec, license, verified: true, password: pwd
+      };
+      msgEl.innerHTML = '<span class="success">Doctor registered. Verified ID: <span class="badge-id">'+id+
+                        '</span> (use for login).</span>';
+      updateStats();
+    }
+
+    // Login / Logout
+    function loginPatient() {
+      const id = document.getElementById("loginPatientId").value.trim();
+      const pwd = document.getElementById("loginPatientPassword").value;
+      const msgEl = document.getElementById("loginPatientMsg");
+
+      const patient = db.patients[id];
+      if (!patient || patient.password !== pwd) {
+        msgEl.innerHTML = '<span class="error">Invalid ID or password.</span>';
+        return;
+      }
+      currentPatientId = id;
+      document.getElementById("patientDashboard").style.display = "block";
+      document.getElementById("doctorDashboard").style.display = "none";
+      document.getElementById("patientIdBadge").innerText = id;
+      document.getElementById("patientHeader").innerText =
+        patient.name + " · " + patient.gender + " · " + patient.age + " yrs";
+      msgEl.innerHTML = '<span class="success">Logged in as patient '+id+'.</span>';
+      renderPatientHistory();
+    }
+
+    function logoutPatient() {
+      currentPatientId = null;
+      document.getElementById("patientDashboard").style.display = "none";
+      document.getElementById("loginPatientMsg").innerHTML = "";
+    }
+
+    function loginDoctor() {
+      const id = document.getElementById("loginDoctorId").value.trim();
+      const pwd = document.getElementById("loginDoctorPassword").value;
+      const msgEl = document.getElementById("loginDoctorMsg");
+
+      const doctor = db.doctors[id];
+      if (!doctor || doctor.password !== pwd) {
+        msgEl.innerHTML = '<span class="error">Invalid ID or password.</span>';
+        return;
+      }
+      currentDoctorId = id;
+      document.getElementById("doctorDashboard").style.display = "block";
+      document.getElementById("patientDashboard").style.display = "none";
+      document.getElementById("doctorHeader").innerText =
+        doctor.name + " · " + doctor.spec + " · License: " + doctor.license;
+      msgEl.innerHTML = '<span class="success">Logged in as doctor '+id+'.</span>';
+    }
+
+    function logoutDoctor() {
+      currentDoctorId = null;
+      currentDoctorViewPatientId = null;
+      document.getElementById("doctorDashboard").style.display = "none";
+      document.getElementById("loginDoctorMsg").innerHTML = "";
+    }
+
+    // Patient actions
+    function patientAddProblem() {
+      if (!currentPatientId) return;
+      const text = document.getElementById("patientProblem").value.trim();
+      const since = document.getElementById("patientProblemSince").value.trim();
+      const msgEl = document.getElementById("patientProblemMsg");
+
+      if (!text) {
+        msgEl.innerHTML = '<span class="error">Please enter your current problem.</span>';
+        return;
+      }
+      const entry = {
+        id: "H" + (db.history.length + 1),
+        patientId: currentPatientId,
+        createdBy: currentPatientId,
+        role: "patient",
+        type: "problem",
+        problem: text,
+        since,
+        createdAt: nowStr()
+      };
+      db.history.push(entry);
+      document.getElementById("patientProblem").value = "";
+      document.getElementById("patientProblemSince").value = "";
+      msgEl.innerHTML = '<span class="success">Problem saved. Your doctor can now see this.</span>';
+      updateStats();
+      renderPatientHistory();
+    }
+
+    function renderPatientHistory() {
+      if (!currentPatientId) return;
+      const container = document.getElementById("patientHistory");
+      const list = db.history.filter(h => h.patientId === currentPatientId);
+      if (!list.length) {
+        container.innerHTML = '<p class="muted">No history yet. Add a problem or visit a doctor.</p>';
+        return;
+      }
+      container.innerHTML = list.map(h => {
+        if (h.type === "problem") {
+          return `
+          <div class="history-entry">
+            <div class="history-meta">
+              Reported by patient · ${h.createdAt}
+            </div>
+            <strong>Problem:</strong> ${h.problem || ""}<br/>
+            ${h.since ? ("<strong>Since:</strong> " + h.since) : ""}
+          </div>`;
+        } else {
+          return `
+          <div class="history-entry">
+            <div class="history-meta">
+              Doctor: ${h.doctorName || ""} (${h.doctorId}) · ${h.createdAt}
+            </div>
+            <strong>Diagnosis:</strong> ${h.diagnosis || ""}<br/>
+            <strong>Treatment:</strong> ${h.treatment || ""}<br/>
+            ${h.reportFile ? ("<strong>Report:</strong> " + h.reportFile) : ""}
+          </div>`;
+        }
+      }).join("");
+    }
+
+    // Doctor actions
+    function searchPatient() {
+      if (!currentDoctorId) return;
+      const id = document.getElementById("searchPatientId").value.trim();
+      const msgEl = document.getElementById("searchPatientMsg");
+      const section = document.getElementById("doctorPatientSection");
+      const headerEl = document.getElementById("doctorPatientHeader");
+      const historyEl = document.getElementById("doctorPatientHistory");
+
+      const patient = db.patients[id];
+      if (!patient) {
+        msgEl.innerHTML = '<span class="error">Patient not found. Ask patient for correct ID.</span>';
+        section.style.display = "none";
+        return;
+      }
+      currentDoctorViewPatientId = id;
+      msgEl.innerHTML = "";
+      section.style.display = "block";
+      headerEl.innerText = patient.name + " · " + patient.gender + " · " + patient.age + " yrs · ID: " + id;
+      renderDoctorPatientHistory();
+    }
+
+    function renderDoctorPatientHistory() {
+      const historyEl = document.getElementById("doctorPatientHistory");
+      if (!currentDoctorViewPatientId) {
+        historyEl.innerHTML = "";
+        return;
+      }
+      const list = db.history.filter(h => h.patientId === currentDoctorViewPatientId);
+      if (!list.length) {
+        historyEl.innerHTML = '<p class="muted">No previous history for this patient.</p>';
+        return;
+      }
+      historyEl.innerHTML = list.map(h => {
+        if (h.type === "problem") {
+          return `
+          <div class="history-entry">
+            <div class="history-meta">
+              Reported by patient · ${h.createdAt}
+            </div>
+            <strong>Problem:</strong> ${h.problem || ""}<br/>
+            ${h.since ? ("<strong>Since:</strong> " + h.since) : ""}
+          </div>`;
+        } else {
+          return `
+          <div class="history-entry">
+            <div class="history-meta">
+              Doctor: ${h.doctorName || ""} (${h.doctorId}) · ${h.createdAt}
+            </div>
+            <strong>Diagnosis:</strong> ${h.diagnosis || ""}<br/>
+            <strong>Treatment:</strong> ${h.treatment || ""}<br/>
+            ${h.reportFile ? ("<strong>Report:</strong> " + h.reportFile) : ""}
+          </div>`;
+        }
+      }).join("");
+    }
+
+    function doctorAddRecord() {
+      if (!currentDoctorId || !currentDoctorViewPatientId) return;
+      const diagnosis = document.getElementById("doctorDiagnosis").value.trim();
+      const treatment = document.getElementById("doctorTreatment").value.trim();
+      const reportFile = document.getElementById("doctorReportFile").value.trim();
+      const msgEl = document.getElementById("doctorAddRecordMsg");
+
+      if (!diagnosis && !treatment && !reportFile) {
+        msgEl.innerHTML = '<span class="error">Enter at least diagnosis or treatment.</span>';
+        return;
+      }
+      const doctor = db.doctors[currentDoctorId];
+
+      const entry = {
+        id: "H" + (db.history.length + 1),
+        patientId: currentDoctorViewPatientId,
+        createdBy: currentDoctorId,
+        role: "doctor",
+        type: "visit",
+        diagnosis,
+        treatment,
+        reportFile,
+        doctorId: currentDoctorId,
+        doctorName: doctor ? doctor.name : "",
+        createdAt: nowStr()
+      };
+      db.history.push(entry);
+      document.getElementById("doctorDiagnosis").value = "";
+      document.getElementById("doctorTreatment").value = "";
+      document.getElementById("doctorReportFile").value = "";
+      msgEl.innerHTML = '<span class="success">Record added to patient history.</span>';
+      updateStats();
+      renderDoctorPatientHistory();
+      if (currentPatientId === currentDoctorViewPatientId) {
+        renderPatientHistory();
+      }
+    }
+
+    // Init
+    updateStats();
+  </script>
+</body>
+</html>
